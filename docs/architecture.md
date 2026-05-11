@@ -23,7 +23,7 @@ because:
 ```
 Snake-RL/
 ├── snake_rl/                   # Core package
-│   ├── __init__.py             # Public API exports
+│   ├── __init__.py             # Public API — lazy pygame import
 │   ├── env.py                  # SnakeEnv — single-agent environment
 │   ├── agent.py                # TabularQAgent + DoubleQAgent
 │   ├── train.py                # train() — single-agent training loop
@@ -32,18 +32,31 @@ Snake-RL/
 │   └── renderer.py             # SnakeRenderer + MultiSnakeRenderer
 ├── scripts/                    # Entry-point scripts
 │   ├── run_training.py         # Train single agent, save plots + Q-table
-│   ├── run_demo.py             # Watch single trained agent play
+│   ├── run_demo.py             # Watch agent play (+ --show_qvalues overlay)
 │   ├── run_compare.py          # Trained vs random statistical comparison
 │   ├── run_heatmap.py          # Policy heatmap visualisation (4 directions)
+│   ├── run_sidebyside.py       # Random vs trained in split-screen window
+│   ├── run_human_vs_ai.py      # Human (arrow keys) vs trained AI
 │   ├── run_multi_training.py   # Train multi-agent, save plots + Q-tables
-│   └── run_multi_demo.py       # Watch two snakes compete live
+│   ├── run_multi_demo.py       # Watch two snakes compete live
+│   ├── run_multiseed_eval.py   # Run N seeds, report mean ± std
+│   └── record_gif.py           # Capture gameplay as animated GIF
 ├── experiments/
-│   ├── checkpoints/            # Saved Q-tables (.pkl)
-│   └── plots/                  # Generated training plots (.png)
-├── docs/                       # Project documentation
+│   ├── checkpoints/            # Saved Q-tables (.pkl) and DQN weights (.pth)
+│   ├── plots/                  # Generated training plots (.png)
+│   └── multiseed_results.json  # Multi-seed evaluation output
+├── tests/
+│   ├── __init__.py
+│   └── test_core.py            # 27 pytest tests: env, agent, Q-update, save/load
+├── docs/
 │   ├── architecture.md         # This file
-│   ├── experiment_log.md       # Per-run experiment results
-│   └── phase_log.md            # Development phase notes
+│   ├── experiment_log.md       # All 9 experiment runs with results
+│   └── phase_log.md            # Development phase notes and decisions
+├── assets/
+│   └── demo_qoverlay.gif       # Gameplay GIF for README
+├── README.md                   # Project front page with results and quickstart
+├── pytest.ini                  # Pytest configuration
+├── .gitignore
 └── requirements.txt
 ```
 

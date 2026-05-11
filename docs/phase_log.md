@@ -211,9 +211,24 @@ collision resolution, separate rewards, shared food.
 
 ---
 
-## Phase 5 — Academic Polish ⏳ Planned
+## Phase 5 — Academic Polish 🔄 In Progress
 
-- Confidence intervals across multiple seeds
-- Report-ready plot generation
-- Full README with methodology, findings, limitations
-- Statistical summary table across all runs
+**Completed so far:**
+- Multi-seed evaluation (Run 9): 3 seeds × 15000 episodes — mean ± std for all metrics
+  Results: mean score 6.63 ± 0.12, max score 23 ± 1 — algorithm confirmed stable
+- `README.md` at project root with GIF, headline results, quickstart, full experiment table
+- `assets/demo_qoverlay.gif` — recorded via `record_gif.py`
+- `tests/test_core.py` — 27 pytest tests covering env, agent, Q-update math, save/load,
+  multi-agent env (27/27 pass in 0.28s)
+- `pytest.ini` — test configuration
+- Metric inconsistency resolved: experiment log now distinguishes training mean
+  (6.50, seed=42) from evaluation mean (11.21, seed=99, frozen policy)
+- Lazy pygame import in `snake_rl/__init__.py` — non-visual scripts now work
+  in environments without pygame installed
+- `.gitignore` — excludes __pycache__, .venv, generated plots; keeps models and assets
+- Project pushed to GitHub
+
+**Still to do:**
+- Formal written report (Word document)
+- Report-ready comparison plots (learning curves side by side, DQN vs tabular bar chart)
+- References section (minimum 8–10 sources)
