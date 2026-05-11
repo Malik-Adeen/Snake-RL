@@ -228,7 +228,16 @@ collision resolution, separate rewards, shared food.
 - `.gitignore` — excludes __pycache__, .venv, generated plots; keeps models and assets
 - Project pushed to GitHub
 
+**DQN added (Run 10):**
+- `snake_rl/dqn_agent.py` — QNetwork (12->128->128->3), ReplayBuffer, DQNAgent
+- `snake_rl/dqn_train.py` — dqn_train() training loop
+- `scripts/run_dqn_training.py` — entry point with training + eval + 3 plots
+- Hardware: NVIDIA RTX 3060 Ti, CUDA 12.4 (PyTorch 2.5.1+cu124)
+- Result: eval mean 11.42, max 25 — matches tabular in 5x fewer episodes (3000 vs 15000)
+- Key finding: sample efficiency is the DQN advantage on this problem size;
+  both methods share the same ~score 11 ceiling set by the 12-bit state abstraction
+
 **Still to do:**
 - Formal written report (Word document)
 - Report-ready comparison plots (learning curves side by side, DQN vs tabular bar chart)
-- References section (minimum 8–10 sources)
+- References section (minimum 8-10 sources)

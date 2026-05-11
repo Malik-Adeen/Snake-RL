@@ -27,6 +27,8 @@ Snake-RL/
 │   ├── env.py                  # SnakeEnv — single-agent environment
 │   ├── agent.py                # TabularQAgent + DoubleQAgent
 │   ├── train.py                # train() — single-agent training loop
+│   ├── dqn_agent.py            # QNetwork, ReplayBuffer, DQNAgent
+│   ├── dqn_train.py            # dqn_train() — DQN training loop
 │   ├── multi_env.py            # MultiSnakeEnv — two-snake competitive env
 │   ├── multi_train.py          # multi_train() — multi-agent training loop
 │   └── renderer.py             # SnakeRenderer + MultiSnakeRenderer
@@ -40,6 +42,7 @@ Snake-RL/
 │   ├── run_multi_training.py   # Train multi-agent, save plots + Q-tables
 │   ├── run_multi_demo.py       # Watch two snakes compete live
 │   ├── run_multiseed_eval.py   # Run N seeds, report mean ± std
+│   ├── run_dqn_training.py     # Train DQN, evaluate, save 3 plots
 │   └── record_gif.py           # Capture gameplay as animated GIF
 ├── experiments/
 │   ├── checkpoints/            # Saved Q-tables (.pkl) and DQN weights (.pth)
