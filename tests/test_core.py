@@ -1,15 +1,18 @@
 """Basic test suite for Snake RL core components.
 
 Covers: environment transitions, collision rules,
-Q-update math, agent save/load, multi-agent env.
+Q-update math, agent save/load, multi-agent env,
+QNetwork forward pass, ReplayBuffer, DQNAgent.
 """
 
 import tempfile
 import pytest
+import torch
 
 from snake_rl.env import SnakeEnv
 from snake_rl.agent import TabularQAgent, DoubleQAgent
 from snake_rl.multi_env import MultiSnakeEnv
+from snake_rl.dqn_agent import QNetwork, ReplayBuffer, DQNAgent
 
 
 # ─────────────────────────────────────────────
@@ -238,3 +241,145 @@ class TestMultiSnakeEnv:
         env.done_a = True
         env.snake_a = []
         assert all(v == 0 for v in env.get_state_a())
+
+
+# ─────────────────────────────────────────────
+# QNetwork
+# ─────────────────────────────────────────────
+
+class TestQNetwork:
+    def test_output_shape(self):
+        net = QNetwork(input_dim=12, hidden_dim=128, output_dim=3)
+        x = torch.zeros(4, 12)
+        out = net(x)
+        assert out.shape == (4, 3)
+
+    def test_output_can_be_negative(self):
+        """No output activation — values must be able to go negative."""
+        net = QNetwork(input_dim=12, hidden_dim=128, output_dim=3)
+        torch.manual_seed(0)
+        x = torch.randn(64, 12)
+        out = net(x)
+        assert out.min().item() < 0.0
+
+    def test_hidden_dim_respected(self):
+        net = QNetwork(input_dim=12, hidden_dim=64, output_dim=3)
+        assert net.fc1.out_features == 64
+        assert net.fc2.out_features == 64
+
+
+# ─────────────────────────────────────────────
+# ReplayBuffer
+# ─────────────────────────────────────────────
+
+class TestReplayBuffer:
+    def test_push_and_len(self):
+        buf = ReplayBuffer(capacity=100)
+        assert len(buf) == 0
+        buf.push((0,)*12, 0, 1.0, (0,)*12, False)
+        assert len(buf) == 1
+
+    def test_capacity_not_exceeded(self):
+        buf = ReplayBuffer(capacity=10)
+        for _ in range(20):
+            buf.push((0,)*12, 0, 0.0, (0,)*12, False)
+        assert len(buf) == 10
+
+    def test_sample_returns_five_lists(self):
+        buf = ReplayBuffer(capacity=100)
+        for i in range(20):
+            buf.push((i % 2,)*12, i % 3, float(i), (0,)*12, i % 2 == 0)
+        result = buf.sample(10)
+        assert len(result) == 5
+        assert all(isinstance(r, list) for r in result)
+
+    def test_sample_correct_batch_size(self):
+        buf = ReplayBuffer(capacity=100)
+        for _ in range(50):
+            buf.push((0,)*12, 1, 0.5, (1,)*12, False)
+        states, actions, rewards, next_states, dones = buf.sample(16)
+        assert len(states) == 16
+        assert len(actions) == 16
+        assert len(rewards) == 16
+        assert len(next_states) == 16
+        assert len(dones) == 16
+
+
+# ─────────────────────────────────────────────
+# DQNAgent
+# ─────────────────────────────────────────────
+
+class TestDQNAgent:
+    def _agent(self) -> DQNAgent:
+        return DQNAgent(batch_size=4, buffer_capacity=100, target_update_freq=10)
+
+    def _fill_buffer(self, agent: DQNAgent, n: int = 10) -> None:
+        for i in range(n):
+            agent.buffer.push((i % 2,)*12, i % 3, float(i), (0,)*12, False)
+
+    def test_choose_action_valid(self):
+        agent = self._agent()
+        for _ in range(20):
+            assert agent.choose_action((0,)*12) in (0, 1, 2)
+
+    def test_choose_action_greedy_deterministic(self):
+        """With epsilon=0 and same state, action should be consistent."""
+        agent = self._agent()
+        agent.epsilon = 0.0
+        actions = {agent.choose_action((1, 0)*6) for _ in range(10)}
+        assert len(actions) == 1
+
+    def test_update_returns_none_when_insufficient(self):
+        agent = self._agent()
+        self._fill_buffer(agent, n=3)  # less than batch_size=4
+        assert agent.update() is None
+
+    def test_update_returns_float_when_sufficient(self):
+        agent = self._agent()
+        self._fill_buffer(agent, n=10)
+        result = agent.update()
+        assert isinstance(result, float)
+        assert result >= 0.0
+
+    def test_steps_done_increments_on_update(self):
+        agent = self._agent()
+        self._fill_buffer(agent, n=10)
+        before = agent.steps_done
+        agent.update()
+        assert agent.steps_done == before + 1
+
+    def test_epsilon_decay_floor(self):
+        agent = DQNAgent(epsilon=1.0, epsilon_min=0.05, epsilon_decay=0.9,
+                         batch_size=4, buffer_capacity=100)
+        for _ in range(200):
+            agent.decay_epsilon()
+        assert agent.epsilon == pytest.approx(0.05)
+
+    def test_target_net_syncs_after_freq_steps(self):
+        """After target_update_freq updates, target weights must equal policy weights."""
+        agent = self._agent()  # target_update_freq=10
+        self._fill_buffer(agent, n=50)
+        # Dirty the target net so it differs from policy net
+        with torch.no_grad():
+            for p in agent.target_net.parameters():
+                p.fill_(999.0)
+        # Run exactly target_update_freq updates
+        for _ in range(10):
+            agent.update()
+        # Target should now match policy
+        for p_pol, p_tgt in zip(agent.policy_net.parameters(),
+                                 agent.target_net.parameters()):
+            assert torch.allclose(p_pol, p_tgt)
+
+    def test_save_load_roundtrip(self):
+        agent = self._agent()
+        agent.epsilon = 0.42
+        agent.steps_done = 77
+        with tempfile.NamedTemporaryFile(suffix=".pth", delete=False) as f:
+            path = f.name
+        agent.save(path)
+        agent2 = self._agent()
+        agent2.load(path)
+        assert agent2.epsilon == pytest.approx(0.42)
+        assert agent2.steps_done == 77
+

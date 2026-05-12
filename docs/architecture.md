@@ -2,19 +2,22 @@
 
 ## 1. Project Overview
 
-This project trains an autonomous Snake agent using **Tabular Q-Learning**, a
-classical model-free reinforcement learning algorithm. The goal is to produce a
-well-documented, reproducible RL experiment that demonstrates both the
-capabilities and the hard limits of tabular methods on a simple game environment.
+This project trains autonomous Snake agents using **Reinforcement Learning**,
+progressing from Tabular Q-Learning through Double Q-Learning to a Deep Q-Network
+(DQN) comparison. The goal is to produce a well-documented, reproducible RL
+experiment that demonstrates both the capabilities and the hard limits of tabular
+methods, then quantifies what function approximation adds.
 
-Tabular Q-Learning is used deliberately instead of a Deep Q-Network (DQN)
-because:
+Tabular Q-Learning is the primary focus because:
 
 - The state space is small enough for an exact lookup table.
 - The algorithm is fully interpretable — every learned value can be inspected.
-- It serves as a meaningful baseline before any function-approximation step.
+- It serves as a meaningful baseline before the function-approximation step.
 - It is well-suited to an academic setting where understanding *why* the agent
   acts is as important as *how well* it acts.
+
+DQN is added in Phase 5 as a direct comparison using the identical environment
+and state representation, isolating function approximation as the only variable.
 
 ---
 
@@ -50,7 +53,8 @@ Snake-RL/
 │   └── multiseed_results.json  # Multi-seed evaluation output
 ├── tests/
 │   ├── __init__.py
-│   └── test_core.py            # 27 pytest tests: env, agent, Q-update, save/load
+│   └── test_core.py            # 42 pytest tests: env, agent, Q-update, save/load,
+│                               #   multi-agent env, QNetwork, ReplayBuffer, DQNAgent
 ├── docs/
 │   ├── architecture.md         # This file
 │   ├── experiment_log.md       # All 9 experiment runs with results

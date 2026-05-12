@@ -23,7 +23,7 @@ Policy = Callable[[State], int]
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Compare random vs trained Snake policies.")
-    parser.add_argument("--model", type=str, default="experiments/checkpoints/q_table.pkl")
+    parser.add_argument("--model", type=str, default=None)
     parser.add_argument("--episodes", type=int, default=100)
     parser.add_argument("--width", type=int, default=10)
     parser.add_argument("--height", type=int, default=10)
@@ -92,6 +92,13 @@ def _format_percent(value: float) -> str:
 
 def main() -> None:
     args = parse_args()
+
+    if args.model is None:
+        args.model = (
+            "experiments/checkpoints/q_table_double.pkl"
+            if args.double
+            else "experiments/checkpoints/q_table.pkl"
+        )
 
     agent = DoubleQAgent(seed=args.seed) if args.double else TabularQAgent(seed=args.seed)
     try:
