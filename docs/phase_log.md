@@ -232,12 +232,46 @@ collision resolution, separate rewards, shared food.
 - `snake_rl/dqn_agent.py` — QNetwork (12->128->128->3), ReplayBuffer, DQNAgent
 - `snake_rl/dqn_train.py` — dqn_train() training loop
 - `scripts/run_dqn_training.py` — entry point with training + eval + 3 plots
+- `scripts/run_dqn_demo.py` — DQN gameplay demo with death animation
 - Hardware: NVIDIA RTX 3060 Ti, CUDA 12.4 (PyTorch 2.5.1+cu124)
 - Result: eval mean 11.42, max 25 — matches tabular in 5x fewer episodes (3000 vs 15000)
 - Key finding: sample efficiency is the DQN advantage on this problem size;
   both methods share the same ~score 11 ceiling set by the 12-bit state abstraction
 
-**Still to do:**
-- Formal written report (Word document)
-- Report-ready comparison plots (learning curves side by side, DQN vs tabular bar chart)
-- References section (minimum 8-10 sources)
+**Death flash animation added:**
+- `snake_rl/renderer.py` — `render_death_flash()` on SnakeRenderer,
+  `render_dead_overlay()` on MultiSnakeRenderer
+- `scripts/run_demo.py` — 4-frame red X flash on collision
+- `scripts/run_multi_demo.py` — just_died flags, responsive arrow keys during flash
+- `scripts/record_gif.py`, `record_sidebyside_gif.py`, `record_multi_gif.py` —
+  death flash frames captured in all GIFs
+
+**GIF recording suite complete:**
+- `scripts/record_sidebyside_gif.py` — frame capture from subsurface panels
+- `scripts/record_multi_gif.py` — frame capture from MultiSnakeRenderer
+- `assets/demo_sidebyside.gif` — random=0 vs trained=14/13 (1.3 MB)
+- `assets/demo_multi.gif` — two RL agents self-play A=8/1/1 B=2/6/0 (766 KB)
+- `assets/demo_qoverlay.gif` — re-recorded with death flash (718 KB)
+
+**Report-ready plots generated:**
+- `scripts/generate_report_plots.py` — hardcoded from experiment_log, no retraining
+- `experiments/plots/report_progression.png` — Runs 1-6 + win rate convergence
+- `experiments/plots/report_winrate_detail.png` — standalone multi-agent win rate
+- `experiments/plots/dqn_vs_tabular.png` — bar chart comparison
+- `experiments/plots/dqn_learning_curve.png` — DQN training diagnostics
+- `experiments/plots/policy_heatmap.png` — 4-direction policy heatmap
+
+**Tests expanded:**
+- `tests/test_core.py` — 42 tests (was 27), added QNetwork, ReplayBuffer, DQNAgent
+
+**README fully updated:**
+- DQN added, max score corrected (24->25), 3 GIFs, 10 runs table,
+  metric framing tightened per GPT-5.5 + GLM audit recommendations
+
+**Formal report produced:**
+- `Snake_RL_Report.docx` — full Word document (title page, TOC, 6 sections, 10 refs)
+- Notion workspace — full report as 8 linked pages with Notion AI prompts
+- Report structure maps ML requirements to RL equivalents (approved by instructor)
+- Audited by GPT-5.5 and GLM: grade estimate 9/10
+
+**Phase 5 complete. Submission ready.**

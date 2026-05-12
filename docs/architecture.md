@@ -46,7 +46,11 @@ Snake-RL/
 │   ├── run_multi_demo.py       # Watch two snakes compete live
 │   ├── run_multiseed_eval.py   # Run N seeds, report mean ± std
 │   ├── run_dqn_training.py     # Train DQN, evaluate, save 3 plots
-│   └── record_gif.py           # Capture gameplay as animated GIF
+│   ├── run_dqn_demo.py         # Watch DQN agent play with death animation
+│   ├── generate_report_plots.py # Report-ready academic figures (hardcoded data)
+│   ├── record_gif.py           # Record single-agent gameplay GIF
+│   ├── record_sidebyside_gif.py # Record random vs trained side-by-side GIF
+│   └── record_multi_gif.py     # Record multi-agent competitive gameplay GIF
 ├── experiments/
 │   ├── checkpoints/            # Saved Q-tables (.pkl) and DQN weights (.pth)
 │   ├── plots/                  # Generated training plots (.png)
@@ -57,10 +61,12 @@ Snake-RL/
 │                               #   multi-agent env, QNetwork, ReplayBuffer, DQNAgent
 ├── docs/
 │   ├── architecture.md         # This file
-│   ├── experiment_log.md       # All 9 experiment runs with results
+│   ├── experiment_log.md       # All 10 experiment runs with results
 │   └── phase_log.md            # Development phase notes and decisions
 ├── assets/
-│   └── demo_qoverlay.gif       # Gameplay GIF for README
+│   ├── demo_qoverlay.gif       # Single agent with Q-value overlay
+│   ├── demo_sidebyside.gif     # Random vs trained split-screen
+│   └── demo_multi.gif          # Two RL agents self-play
 ├── README.md                   # Project front page with results and quickstart
 ├── pytest.ini                  # Pytest configuration
 ├── .gitignore
@@ -137,6 +143,19 @@ Produces more conservative, less noisy Q-values and a more consistent policy.
 Both agents implement `save(path)` and `load(path)` via pickle.
 `DoubleQAgent` saves `{"q_a": ..., "q_b": ...}` — incompatible with
 `TabularQAgent` pickle format. Use `--double` flag in scripts to load correctly.
+
+### `DQNAgent`
+
+Neural Q-Learning agent using PyTorch. Comprises:
+- `QNetwork`: fully-connected feedforward network (12 → 128 → 128 → 3),
+  ReLU on hidden layers, no output activation
+- `ReplayBuffer`: circular deque (capacity 10,000), random batch sampling
+- `DQNAgent`: epsilon-greedy action selection, MSE loss, Adam optimiser,
+  target network synced every 500 steps
+
+Save format: `torch.save` checkpoint containing both `policy_state_dict` and
+`target_state_dict`, plus `epsilon` and `steps_done`.
+Load always uses `map_location="cpu"` for laptop demo compatibility.
 
 ---
 
@@ -275,4 +294,4 @@ separate reward signal, enabling independent Q-value learning.
 | 2 | Visualisation & Policy Heatmap | ✅ Complete |
 | 3 | Double Q-Learning + 12-bit State | ✅ Complete |
 | 4 | Multi-Agent Extension | ✅ Complete |
-| 5 | Academic Polish & Report | 🔄 In progress |
+| 5 | Academic Polish & Report | ✅ Complete |
