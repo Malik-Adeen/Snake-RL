@@ -136,6 +136,8 @@ def main() -> None:
 
             done_random = False
             done_trained = False
+            just_died_random = False
+            just_died_trained = False
             steps = 0
 
             while (not done_random or not done_trained) and steps < args.max_steps:
@@ -151,11 +153,15 @@ def main() -> None:
 
                 if not done_random:
                     action_random = rng.choice([0, 1, 2])
+                    prev_random = done_random
                     _, _, done_random = env_random.step(action_random)
+                    just_died_random = done_random and not prev_random
 
                 if not done_trained:
                     action_trained = agent.choose_action(env_trained.get_state())
+                    prev_trained = done_trained
                     _, _, done_trained = env_trained.step(action_trained)
+                    just_died_trained = done_trained and not prev_trained
 
                 steps += 1
 
@@ -192,6 +198,38 @@ def main() -> None:
 
                 if len(frames) < args.max_frames:
                     frames.append(capture_frame(screen))
+
+                # Death flash on whichever panel just died
+                if just_died_random or just_died_trained:
+                    for i in range(3):
+                        bright = (i % 2 == 0)
+                        if just_died_random:
+                            left_renderer.render_death_flash(
+                                left_surface,
+                                env_random.snake, env_random.food,
+                                env_random.score, ep, agent.epsilon, "Random",
+                                bright=bright,
+                            )
+                        if just_died_trained:
+                            right_renderer.render_death_flash(
+                                right_surface,
+                                env_trained.snake, env_trained.food,
+                                env_trained.score, ep, agent.epsilon, "Trained",
+                                bright=bright,
+                            )
+                        _draw_wide_hud(
+                            screen,
+                            panel_w=panel_w,
+                            grid_h_px=args.height * cell_size,
+                            window_w=window_w,
+                            score_random=env_random.score,
+                            score_trained=env_trained.score,
+                            episode=ep,
+                            epsilon=agent.epsilon,
+                        )
+                        pygame.display.flip()
+                        if len(frames) < args.max_frames:
+                            frames.append(capture_frame(screen))
 
             print(f"Episode {ep}: random={env_random.score} trained={env_trained.score}")
             if stop_requested:

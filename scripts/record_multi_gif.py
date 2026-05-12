@@ -66,13 +66,18 @@ def main() -> None:
             env.reset()
             done = False
             steps = 0
+            was_dead_a = False
+            was_dead_b = False
             while not done and steps < args.max_steps:
                 action_a = agent_a.choose_action(env.get_state_a())
                 action_b = (
                     rng.choice([0, 1, 2]) if agent_b is None else agent_b.choose_action(env.get_state_b())
                 )
                 _, _, _, done_a, done_b, done = env.step(action_a, action_b)
-                _ = (done_a, done_b)
+                just_died_a = done_a and not was_dead_a
+                just_died_b = done_b and not was_dead_b
+                was_dead_a = done_a
+                was_dead_b = done_b
                 steps += 1
                 renderer.render(
                     env.snake_a,
@@ -87,6 +92,17 @@ def main() -> None:
                 )
                 if len(frames) < args.max_frames:
                     frames.append(capture_frame(renderer.screen))
+                # Capture death flash frames
+                if just_died_a or just_died_b:
+                    for i in range(3):
+                        renderer.render_dead_overlay(
+                            dead_a=just_died_a,
+                            dead_b=just_died_b,
+                            bright=(i % 2 == 0),
+                        )
+                        pygame.display.flip()
+                        if len(frames) < args.max_frames:
+                            frames.append(capture_frame(renderer.screen))
             winner = (
                 "A"
                 if env.score_a > env.score_b

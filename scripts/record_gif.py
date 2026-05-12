@@ -114,6 +114,19 @@ def main() -> None:
                 if len(frames) < args.max_frames:
                     frames.append(capture_frame(renderer.screen))
 
+            # Capture death flash frames into GIF
+            if done:
+                for i in range(3):
+                    renderer.render_death_flash(
+                        renderer.screen,
+                        env.snake, env.food, env.score,
+                        ep, args.epsilon, "Trained Agent",
+                        bright=(i % 2 == 0),
+                    )
+                    pygame.display.flip()
+                    if len(frames) < args.max_frames:
+                        frames.append(capture_frame(renderer.screen))
+
             print(f"  Episode {ep}: score={env.score} | frames so far: {len(frames)}")
             pygame.time.wait(800)
 
