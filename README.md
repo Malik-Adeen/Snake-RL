@@ -48,13 +48,15 @@ Tabular Q-Learning · Double Q-Learning · DQN · Multi-Agent · Live Q-Value Ov
 
 | Metric | Value |
 |---|---|
-| Mean score vs random baseline | **56× better** |
+| Eval mean score (frozen policy, seed=99) | **11.21** |
+| Training mean score (last 100 eps, ε=0.05) | **6.50** |
 | Episodes scoring ≥ 5 | **92%** |
 | Episodes scoring ≥ 10 | **60%** |
 | Max score achieved | **25** |
-| DQN vs Double Q eval mean | **11.42 vs 11.21** (5× fewer episodes) |
+| Multi-seed reproducibility | **6.63 ± 0.12** (3 seeds) |
+| DQN eval mean (same state, 3k eps) | **11.42** |
 | Win rate vs random (multi-agent) | **86.52%** |
-| Win rate vs self-play opponent | **~40%** (genuinely competitive) |
+| Win rate in self-play | **~40%** (no clear dominance) |
 | Final state space explored | **1,017 unique states** |
 | Test suite | **42/42 passing** |
 
@@ -65,8 +67,8 @@ Tabular Q-Learning · Double Q-Learning · DQN · Multi-Agent · Live Q-Value Ov
 - **Tabular Q-Learning converges but plateaus** — the binary state abstraction is the binding constraint, not training time
 - **Double Q-Learning reduces variance** — +29% mean score improvement with no architectural change
 - **Tail awareness is the decisive feature** — adding 4 tail-direction bits produced a +378% mean score jump
-- **DQN matches tabular in 5× fewer episodes** — function approximation generalises across unvisited states; the ceiling is shared because both use the same 12-bit state
-- **Self-play ≠ domination** — a trained agent wins 86% against random but only ~40% against a self-play opponent, exposing random-baseline win rate as a poor quality measure
+- **DQN reaches comparable performance in fewer episodes** — in this setup, DQN matched tabular eval mean after 3,000 episodes vs 15,000 for Double Q; function approximation improves sample efficiency, not final policy quality
+- **Self-play reveals honest evaluation** — a trained agent wins 86% against random but shows no clear dominance in self-play, exposing random-baseline win rate as an insufficient quality measure
 - **Tabular RL is fully interpretable** — every Q-value can be read, every decision visualised
 
 ---
