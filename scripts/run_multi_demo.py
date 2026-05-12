@@ -75,6 +75,8 @@ def main() -> None:
             done = False
             paused = False
             steps = 0
+            was_dead_a = False
+            was_dead_b = False
 
             while not done and steps < args.max_steps:
                 for event in pygame.event.get():
@@ -116,7 +118,10 @@ def main() -> None:
                     action_b = agent_b.choose_action(env.get_state_b())
 
                 _, _, _, done_a, done_b, done = env.step(action_a, action_b)
-                _ = (done_a, done_b)
+                just_died_a = done_a and not was_dead_a
+                just_died_b = done_b and not was_dead_b
+                was_dead_a = done_a
+                was_dead_b = done_b
                 steps += 1
 
                 renderer.render(
@@ -130,6 +135,31 @@ def main() -> None:
                     mode_label=mode_label,
                     fps=current_fps,
                 )
+
+                # Death animation — fires exactly once per snake death
+                if just_died_a or just_died_b:
+                    for i in range(4):
+                        bright = (i % 2 == 0)
+                        renderer.render_dead_overlay(
+                            dead_a=just_died_a,
+                            dead_b=just_died_b,
+                            bright=bright,
+                        )
+                        pygame.display.flip()
+                        # Manual wait — keeps arrow keys responsive
+                        start_t = pygame.time.get_ticks()
+                        while pygame.time.get_ticks() - start_t < 150:
+                            for ev in pygame.event.get():
+                                if ev.type == pygame.QUIT:
+                                    raise SystemExit
+                                if ev.type == pygame.KEYDOWN:
+                                    if ev.key == pygame.K_q:
+                                        raise SystemExit
+                                    if ev.key == pygame.K_UP:
+                                        current_fps = min(60, current_fps + 5)
+                                    if ev.key == pygame.K_DOWN:
+                                        current_fps = max(1, current_fps - 5)
+                            pygame.time.wait(10)
 
             winner = (
                 "A"

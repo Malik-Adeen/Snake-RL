@@ -173,6 +173,9 @@ class SnakeRenderer:
     HUD_BG = (25, 25, 35)
     TEXT = (220, 220, 220)
     TEXT_DIM = (120, 120, 140)
+    SNAKE_DEAD_BRIGHT: Color = (255, 60, 60)
+    SNAKE_DEAD_DIM: Color = (100, 15, 15)
+    DEATH_X_COLOR: Color = (255, 255, 255)
 
     def __init__(self, grid_width: int = 10, grid_height: int = 10, cell_size: int = 40) -> None:
         self.grid_width: int = grid_width
@@ -252,6 +255,41 @@ class SnakeRenderer:
         _draw_food(surface, food, self.cell_size, self.FOOD)
         self._draw_hud(surface, grid_pixel_height, score, episode, epsilon, agent_label)
 
+    def render_death_flash(
+        self,
+        surface: pygame.Surface,
+        snake: Sequence[Position],
+        food: Position,
+        score: int,
+        episode: int,
+        epsilon: float,
+        agent_label: str,
+        bright: bool = True,
+    ) -> None:
+        """Render a death flash frame — snake turns red, X drawn at head."""
+        grid_pixel_height = self._draw_grid(surface)
+
+        # Draw snake in red (reuse _draw_snake_body_and_head with red colors)
+        body_col = self.SNAKE_DEAD_BRIGHT if bright else self.SNAKE_DEAD_DIM
+        head_col = (255, 120, 120) if bright else (140, 30, 30)
+        _draw_snake_body_and_head(
+            surface, snake, self.cell_size, body_col, head_col
+        )
+        _draw_food(surface, food, self.cell_size, self.FOOD)
+
+        # Draw X at the head cell
+        if snake:
+            hx, hy = snake[0]
+            margin = 6
+            x1 = hx * self.cell_size + margin
+            y1 = hy * self.cell_size + margin
+            x2 = (hx + 1) * self.cell_size - margin
+            y2 = (hy + 1) * self.cell_size - margin
+            pygame.draw.line(surface, self.DEATH_X_COLOR, (x1, y1), (x2, y2), 3)
+            pygame.draw.line(surface, self.DEATH_X_COLOR, (x2, y1), (x1, y2), 3)
+
+        self._draw_hud(surface, grid_pixel_height, score, episode, epsilon, agent_label)
+
     def render(
         self,
         snake: Sequence[Position],
@@ -311,6 +349,8 @@ class MultiSnakeRenderer:
         pygame.display.set_caption("Snake RL — Multi Agent")
         self.font: pygame.font.Font = pygame.font.SysFont("monospace", 18)
         self.clock: pygame.time.Clock = pygame.time.Clock()
+        self._last_snake_a: list = []
+        self._last_snake_b: list = []
 
     def render(
         self,
@@ -332,6 +372,8 @@ class MultiSnakeRenderer:
 
         grid_pixel_height: int = self.grid_height * self.cell_size
         self.screen.fill(self.BG)
+        self._last_snake_a = list(snake_a)
+        self._last_snake_b = list(snake_b)
 
         for x in range(self.grid_width + 1):
             px: int = x * self.cell_size
@@ -386,6 +428,38 @@ class MultiSnakeRenderer:
 
         pygame.display.flip()
         self.clock.tick(fps)
+
+    def render_dead_overlay(
+        self,
+        dead_a: bool = False,
+        dead_b: bool = False,
+        bright: bool = True,
+    ) -> None:
+        """Draw red X markers over whichever snake(s) just died.
+        Call after render() to overlay the death indicator on the current frame."""
+        x_color = (255, 255, 255)
+        margin = 6
+
+        def draw_x(snake: Sequence[Position], color: tuple) -> None:
+            if not snake:
+                return
+            hx, hy = snake[0]
+            x1 = hx * self.cell_size + margin
+            y1 = hy * self.cell_size + margin
+            x2 = (hx + 1) * self.cell_size - margin
+            y2 = (hy + 1) * self.cell_size - margin
+            pygame.draw.line(self.screen, x_color, (x1, y1), (x2, y2), 4)
+            pygame.draw.line(self.screen, x_color, (x2, y1), (x1, y2), 4)
+            # Red tint overlay on head cell
+            tint = pygame.Surface((self.cell_size, self.cell_size), pygame.SRCALPHA)
+            alpha = 160 if bright else 80
+            tint.fill((*color, alpha))
+            self.screen.blit(tint, (hx * self.cell_size, hy * self.cell_size))
+
+        if dead_a:
+            draw_x(self._last_snake_a, (220, 50, 50))
+        if dead_b:
+            draw_x(self._last_snake_b, (220, 50, 50))
 
     def close(self) -> None:
         pygame.quit()

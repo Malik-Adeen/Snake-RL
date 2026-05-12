@@ -95,7 +95,9 @@ Snake-RL/
 │   ├── run_multi_training.py   # Multi-agent training
 │   ├── run_multi_demo.py       # Multi-agent visual demo
 │   ├── generate_report_plots.py # Report-ready academic figures
-│   └── record_gif.py           # Capture gameplay as animated GIF
+│   ├── record_gif.py            # Record single-agent gameplay GIF
+│   ├── record_sidebyside_gif.py # Record random vs trained side-by-side GIF
+│   └── record_multi_gif.py      # Record multi-agent competitive gameplay GIF
 ├── experiments/
 │   ├── checkpoints/            # Saved models (.pkl tabular, .pth DQN)
 │   └── plots/                  # Training and report plots (.png)

@@ -23,7 +23,7 @@ DIRECTIONS: List[Position] = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run a trained Snake agent demo.")
-    parser.add_argument("--model", type=str, default="experiments/checkpoints/q_table.pkl")
+    parser.add_argument("--model", type=str, default=None)
     parser.add_argument("--width", type=int, default=10)
     parser.add_argument("--height", type=int, default=10)
     parser.add_argument("--fps", type=int, default=10)
@@ -172,6 +172,12 @@ def _draw_q_overlay(
 
 def main() -> None:
     args = parse_args()
+    if args.model is None:
+        args.model = (
+            "experiments/checkpoints/q_table_double.pkl"
+            if args.double
+            else "experiments/checkpoints/q_table.pkl"
+        )
     rng = random.Random(args.seed)
     model_path = pathlib.Path(args.model)
     if not model_path.exists():
@@ -253,6 +259,23 @@ def main() -> None:
                         episode=ep, epsilon=args.epsilon,
                         agent_label="Trained Agent", fps=current_fps,
                     )
+
+            # Death animation — 4 alternating flash frames
+            if done:
+                for i in range(4):
+                    bright = (i % 2 == 0)
+                    renderer.render_death_flash(
+                        renderer.screen,
+                        env.snake,
+                        env.food,
+                        env.score,
+                        ep,
+                        args.epsilon,
+                        "Trained Agent",
+                        bright=bright,
+                    )
+                    pygame.display.flip()
+                    pygame.time.wait(150)
 
             if steps >= args.max_steps:
                 print(f"Episode {ep}: score={env.score} (timeout)")
